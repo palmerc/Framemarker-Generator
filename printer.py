@@ -50,40 +50,61 @@ def chunks(arr, size):
     for i in xrange(0, len(arr), size):
         yield arr[i:i+size]
 
-def generate_marker(number):
-    filename = 'marker_%04d.pdf' % number
-    title = 'Marker %d' % number
-    image_size = 7 * cm
+def draw_marker(cv, x, y, number=213, size=7):
+    image_size = size * cm
 
-    packet = StringIO.StringIO()
-    cv = canvas.Canvas(packet, pagesize=A4)
+    # Back up to bottom, left-hand corner
+    x -= (image_size / 2)
+    y -= (image_size / 2)
 
-    font_size = 24
-    page_width, page_height = A4
-    cv.setFont('Helvetica', font_size)
-    cv.drawCentredString(page_width / 2, page_height - font_size * 4, title)
-
+    # Divide the region into 7 sub-squares
     square_size = image_size / 7
-    start_x = (page_width / 2) - (image_size / 2)
-    start_y = (page_height / 2) - (image_size / 2)
+
+    # Set the color to black for stroke and fill
     cv.setStrokeColorRGB(0.0, 0.0, 0.0)
     cv.setFillColorRGB(0.0, 0.0, 0.0)
-    message = np.array(list(convert_to_codeword(convert_to_binary_list(number, 10))))
-    cv.rect(start_x - (square_size / 2), start_y - (square_size / 2), image_size + square_size, image_size + square_size, 1)
-    cv.rect(start_x, start_y, image_size, image_size, 1, 1)
 
-    start_x += square_size
-    start_y += square_size
+    # Get the codewords for the number
+    message = np.array(list(convert_to_codeword(convert_to_binary_list(number, 10))))
+
+    # Draw a thin outline
+    cv.rect(x - (square_size / 2), y - (square_size / 2), image_size + square_size, image_size + square_size, 1)
+
+    # Draw a black box inside
+    cv.rect(x, y, image_size, image_size, 1, 1)
+
+    x += square_size
+    y += square_size
+
+    # Change the color to white for stroke and fill
     cv.setStrokeColorRGB(1.0, 1.0, 1.0)
     cv.setFillColorRGB(1.0, 1.0, 1.0)
     for column in range(0, 5):
         for row in range(0, 5):
-            x = start_x + (square_size * row)
-            y = start_y + (square_size * column)
             if message[4 - column, row] == 1:
-                cv.rect(x, y, square_size, square_size, 1, 1)
+                x_offset = (square_size * row)
+                y_offset = (square_size * column)
+                cv.rect(x + x_offset, y + y_offset, square_size, square_size, 1, 1)
 
     cv.save()
+
+def main():
+    pagesize = A4
+    number = 213
+    size = 5
+    font_size = 24
+    font_name = 'Helvetica'
+    title = 'Marker %d - %d cm' % (number, size)
+    filename = 'marker_%04d.pdf' % number
+
+    packet = StringIO.StringIO()
+
+    cv = canvas.Canvas(packet, pagesize)
+    page_width, page_height = pagesize
+    cv.setFont(font_name, font_size)
+    cv.drawCentredString(page_width / 2, page_height - font_size * 4, title)
+
+    draw_marker(cv, page_width / 2, page_height / 2, number, size)
 
     packet.seek(0)
     with open(filename, 'wb') as f:
@@ -91,8 +112,6 @@ def generate_marker(number):
     f.close()
     packet.close()
 
-def main():
-    generate_marker(213)
 
 if __name__ == "__main__":
     main()
