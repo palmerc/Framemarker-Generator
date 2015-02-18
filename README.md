@@ -6,7 +6,7 @@ I wrote this python script to generate PDFs of the framemarkers with all values 
 
 ## About the framemarker
 
-The framemarker are a modified hamming code comprised of 5 codewords, each 5-bits long. Each word carries only 2 data bits. Hence the reason there are only 1024 possible markers. The 4 valid codewords are below:
+The framemarkers use a modified hamming code comprised of 5 codewords, each 5-bits long. Each word carries only 2 data bits. Hence the reason there are only 1024 possible markers. The 4 valid codewords are below:
 
     1 0 0 0 0,
     1 0 1 1 1,
