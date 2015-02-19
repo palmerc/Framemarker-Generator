@@ -79,50 +79,63 @@ def draw_marker(cv, x, y, number=213, size=7):
                 y_offset = (square_size * column)
                 cv.rect(start_x + x_offset, start_y + y_offset, square_size, square_size, 1, 1)
 
-def main():
-    author = 'Cameron Lowell Palmer'
-    catalog = True
-    pagesize = A4
-    number = 213
-    size = 5
+def catalog(cv, pagesize):
+    page_width, page_height = pagesize
+    font_name = 'Helvetica'
+
+    size = 2 * cm
+    padding = 2 * cm
+    padded_size = size + padding
+    x = 0
+    y = page_height
+    columns_per_page = int(page_width / padded_size)
+    rows_per_page = int(page_height / padded_size)
+    for number in range(0, 1024):
+        current_column = number % columns_per_page
+        current_row = number / columns_per_page
+
+        page_row = current_row % rows_per_page
+        x_offset = (current_column * padded_size) + (padded_size / 2)
+        y_offset = (page_row * padded_size) + (padded_size / 2)
+
+        if current_row > 0 and current_column == 0 and page_row == 0:
+            cv.showPage()
+
+        draw_marker(cv, x + x_offset, y - y_offset, number, size)
+        cv.setFont(font_name, 8)
+        cv.setFillColorRGB(0.0, 0.0, 0.0)
+        cv.drawCentredString(x + x_offset, y - y_offset - (padded_size / 2) + 8, str(number))
+
+def marker_page(cv, pagesize, number, size):
+    page_width, page_height = pagesize
+
     font_size = 24
     font_name = 'Helvetica'
+
+    cv.setFont(font_name, font_size)
+    cv.drawCentredString(page_width / 2, page_height - font_size * 4, title)
+
+    draw_marker(cv, page_width / 2, page_height / 2, number, size)
+
+def main():
+    catalog = True
+    pagesize = A4
 
     packet = StringIO.StringIO()
 
     cv = canvas.Canvas(packet, pagesize)
-    page_width, page_height = pagesize
     if catalog:
         title = 'Framemarker Catalog'
+        author = 'Cameron Lowell Palmer'
         filename = 'catalog.pdf'
-        size = 2 * cm
-        padding = 2 * cm
-        padded_size = size + padding
-        x = 0
-        y = page_height
-        columns_per_page = int(page_width / padded_size)
-        rows_per_page = int(page_height / padded_size)
-        for number in range(0, 1024):
-            current_column = number % columns_per_page
-            current_row = number / columns_per_page
-
-            page_row = current_row % rows_per_page
-            x_offset = (current_column * padded_size) + (padded_size / 2)
-            y_offset = (page_row * padded_size) + (padded_size / 2)
-
-            if current_row > 0 and current_column == 0 and page_row == 0:
-                cv.showPage()
-
-            draw_marker(cv, x + x_offset, y - y_offset, number, size)
-            cv.setFont(font_name, 8)
-            cv.setFillColorRGB(0.0, 0.0, 0.0)
-            cv.drawCentredString(x + x_offset, y - y_offset - (padded_size / 2) + 8, str(number))
+        catalog(cv, pagesize)
     else:
-        filename = 'marker_%04d.pdf' % number
+        number = 213
+        size = 5 * cm
+        author = 'Cameron Lowell Palmer'
         title = 'Marker %d - %d cm' % (number, size)
-        cv.setFont(font_name, font_size)
-        cv.drawCentredString(page_width / 2, page_height - font_size * 4, title)
-        draw_marker(cv, page_width / 2, page_height / 2, number, size)
+        filename = 'marker_%04d.pdf' % number
+        marker_page(cv, pagesize, number, size)
 
     cv.setAuthor(author)
     cv.setTitle(title)
