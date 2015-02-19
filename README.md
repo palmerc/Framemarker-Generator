@@ -17,6 +17,8 @@ The framemarkers use a modified hamming code comprised of 5 codewords, each 5-bi
 
 1s are white, 0s are black. The data bits are in columns 2 and 3. The one provided in the book is the number 213 and the printed version is 7x7 centimeters.
 
+I have provided a [catalog of all 1024 framemarkers](!catalog.pdf?raw=true "Space invaders program. Can't tell who's who without a probram.").
+
 If you're interested in trying out their code you should buy the book and download the [source code][1].
 
 [0]: https://www.packtpub.com/application-development/mastering-opencv-practical-computer-vision-projects
