@@ -1,9 +1,12 @@
+#!/usr/bin/env python
+import argparse
 import numpy as np
 import StringIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 
+author = 'Cameron Lowell Palmer'
 codewords = [[1,0,0,0,0],
              [1,0,1,1,1],
              [0,1,0,0,1],
@@ -151,25 +154,22 @@ def marker_page(cv, pagesize, number, size, title):
 
     draw_marker(cv, page_width / 2, page_height / 2, number, size)
 
-def main():
-    catalog = True
+def main(catalog, numbers=None, size=None):
     pagesize = A4
-
     packet = StringIO.StringIO()
 
     cv = canvas.Canvas(packet, pagesize)
     if catalog:
         title = 'Framemarker Catalog'
-        author = 'Cameron Lowell Palmer'
         filename = 'catalog.pdf'
         create_catalog(cv, pagesize)
     else:
-        number = 213
-        size = 5 * cm
-        author = 'Cameron Lowell Palmer'
-        title = 'Marker %d - %d cm' % (number, size)
-        filename = 'marker_%04d.pdf' % number
-        marker_page(cv, pagesize, number, size, title)
+        title = 'Framemarkers'
+        filename = 'markers.pdf'
+        for number in numbers:
+            marker_title = 'Marker %d - %d cm' % (number, size)
+            marker_page(cv, pagesize, number, size * cm, marker_title)
+            cv.showPage()
 
     cv.setAuthor(author)
     cv.setTitle(title)
@@ -183,4 +183,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Generate some framemarkers.')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--numbers', metavar='N', nargs='+', type=int, help='Marker number in the range of 0-1023')
+    group.add_argument('--catalog', action='store_true', dest='catalog', help='Generate the catalog of all markers')
+    parser.add_argument('--size', type=int, default=7, help='Size in centimeters of the marker')
+    args = parser.parse_args()
+    if args.catalog:
+        main(args.catalog)
+    else:
+        main(False, args.numbers, args.size)
