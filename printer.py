@@ -1,12 +1,8 @@
 import numpy as np
-import Image
 import StringIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-
 
 def convert_to_codeword(binary_message):
     codewords = [[1,0,0,0,0],
@@ -51,14 +47,12 @@ def chunks(arr, size):
         yield arr[i:i+size]
 
 def draw_marker(cv, x, y, number=213, size=7):
-    image_size = size * cm
-
     # Back up to bottom, left-hand corner
-    x -= (image_size / 2)
-    y -= (image_size / 2)
+    x -= (size / 2)
+    y -= (size / 2)
 
     # Divide the region into 7 sub-squares
-    square_size = image_size / 7
+    square_size = size / 7
 
     # Set the color to black for stroke and fill
     cv.setStrokeColorRGB(0.0, 0.0, 0.0)
@@ -68,14 +62,13 @@ def draw_marker(cv, x, y, number=213, size=7):
     message = np.array(list(convert_to_codeword(convert_to_binary_list(number, 10))))
 
     # Draw a thin outline
-    cv.rect(x - (square_size / 2), y - (square_size / 2), image_size + square_size, image_size + square_size, 1)
+    cv.rect(x - (square_size / 2), y - (square_size / 2), size + square_size, size + square_size, 1)
 
     # Draw a black box inside
-    cv.rect(x, y, image_size, image_size, 1, 1)
+    cv.rect(x, y, size, size, 1, 1)
 
-    x += square_size
-    y += square_size
-
+    start_x = x + square_size
+    start_y = y + square_size
     # Change the color to white for stroke and fill
     cv.setStrokeColorRGB(1.0, 1.0, 1.0)
     cv.setFillColorRGB(1.0, 1.0, 1.0)
@@ -84,28 +77,57 @@ def draw_marker(cv, x, y, number=213, size=7):
             if message[4 - column, row] == 1:
                 x_offset = (square_size * row)
                 y_offset = (square_size * column)
-                cv.rect(x + x_offset, y + y_offset, square_size, square_size, 1, 1)
-
-    cv.save()
+                cv.rect(start_x + x_offset, start_y + y_offset, square_size, square_size, 1, 1)
 
 def main():
+    author = 'Cameron Lowell Palmer'
+    catalog = True
     pagesize = A4
     number = 213
     size = 5
     font_size = 24
     font_name = 'Helvetica'
-    title = 'Marker %d - %d cm' % (number, size)
-    filename = 'marker_%04d.pdf' % number
 
     packet = StringIO.StringIO()
 
     cv = canvas.Canvas(packet, pagesize)
     page_width, page_height = pagesize
-    cv.setFont(font_name, font_size)
-    cv.drawCentredString(page_width / 2, page_height - font_size * 4, title)
+    if catalog:
+        title = 'Framemarker Catalog'
+        filename = 'catalog.pdf'
+        size = 2 * cm
+        padding = 2 * cm
+        padded_size = size + padding
+        x = 0
+        y = page_height
+        columns_per_page = int(page_width / padded_size)
+        rows_per_page = int(page_height / padded_size)
+        for number in range(0, 1024):
+            current_column = number % columns_per_page
+            current_row = number / columns_per_page
 
-    draw_marker(cv, page_width / 2, page_height / 2, number, size)
+            page_row = current_row % rows_per_page
+            x_offset = (current_column * padded_size) + (padded_size / 2)
+            y_offset = (page_row * padded_size) + (padded_size / 2)
 
+            if current_row > 0 and current_column == 0 and page_row == 0:
+                cv.showPage()
+
+            draw_marker(cv, x + x_offset, y - y_offset, number, size)
+            cv.setFont(font_name, 8)
+            cv.setFillColorRGB(0.0, 0.0, 0.0)
+            cv.drawCentredString(x + x_offset, y - y_offset - (padded_size / 2) + 8, str(number))
+    else:
+        filename = 'marker_%04d.pdf' % number
+        title = 'Marker %d - %d cm' % (number, size)
+        cv.setFont(font_name, font_size)
+        cv.drawCentredString(page_width / 2, page_height - font_size * 4, title)
+        draw_marker(cv, page_width / 2, page_height / 2, number, size)
+
+    cv.setAuthor(author)
+    cv.setTitle(title)
+
+    cv.save()
     packet.seek(0)
     with open(filename, 'wb') as f:
         f.write(packet.getvalue())
