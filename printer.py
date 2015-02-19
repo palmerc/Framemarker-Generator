@@ -106,7 +106,7 @@ def catalog(cv, pagesize):
         cv.setFillColorRGB(0.0, 0.0, 0.0)
         cv.drawCentredString(x + x_offset, y - y_offset - (padded_size / 2) + 8, str(number))
 
-def marker_page(cv, pagesize, number, size):
+def marker_page(cv, pagesize, number, size, title):
     page_width, page_height = pagesize
 
     font_size = 24
@@ -135,7 +135,7 @@ def main():
         author = 'Cameron Lowell Palmer'
         title = 'Marker %d - %d cm' % (number, size)
         filename = 'marker_%04d.pdf' % number
-        marker_page(cv, pagesize, number, size)
+        marker_page(cv, pagesize, number, size, title)
 
     cv.setAuthor(author)
     cv.setTitle(title)
