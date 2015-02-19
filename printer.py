@@ -4,12 +4,12 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 
-def convert_to_codeword(binary_message):
-    codewords = [[1,0,0,0,0],
-                 [1,0,1,1,1],
-                 [0,1,0,0,1],
-                 [0,1,1,1,0]]
+codewords = [[1,0,0,0,0],
+             [1,0,1,1,1],
+             [0,1,0,0,1],
+             [0,1,1,1,0]]
 
+def convert_to_codeword(binary_message):
     for first, second in chunks(binary_message, 2):
         if first == 0 and second == 0:
             codeword = codewords[0]
@@ -79,7 +79,39 @@ def draw_marker(cv, x, y, number=213, size=7):
                 y_offset = (square_size * column)
                 cv.rect(start_x + x_offset, start_y + y_offset, square_size, square_size, 1, 1)
 
-def catalog(cv, pagesize):
+def check_for_symmetry(number):
+    message = np.array(list(convert_to_codeword(convert_to_binary_list(number, 10))))
+
+    count = 0
+    rotation = np.rot90(message)
+    for i in range(0, 3):
+        if np.array_equal(message, rotation):
+            count += 1
+        rotation = np.rot90(rotation)
+    return count
+
+def check_for_collision(number):
+    message = np.array(list(convert_to_codeword(convert_to_binary_list(number, 10))))
+
+    collision = False
+    rotation = np.rot90(message)
+    # Rotate each message 3 times
+    for i in range(0, 3):
+        count = 0
+        # Go through each word
+        for word in rotation:
+            # See if it matches a valid codeword
+            for codeword in codewords:
+                if np.array_equal(codeword, word):
+                    count += 1
+                    break
+        rotation = np.rot90(rotation)
+        if count > 4:
+            collision = True
+
+    return collision
+
+def create_catalog(cv, pagesize):
     page_width, page_height = pagesize
     font_name = 'Helvetica'
 
@@ -102,9 +134,11 @@ def catalog(cv, pagesize):
             cv.showPage()
 
         draw_marker(cv, x + x_offset, y - y_offset, number, size)
+
         cv.setFont(font_name, 8)
         cv.setFillColorRGB(0.0, 0.0, 0.0)
-        cv.drawCentredString(x + x_offset, y - y_offset - (padded_size / 2) + 8, str(number))
+        string = '%d - %d - %d' % (number, check_for_symmetry(number), check_for_collision(number))
+        cv.drawCentredString(x + x_offset, y - y_offset - (padded_size / 2) + 8, string)
 
 def marker_page(cv, pagesize, number, size, title):
     page_width, page_height = pagesize
@@ -128,7 +162,7 @@ def main():
         title = 'Framemarker Catalog'
         author = 'Cameron Lowell Palmer'
         filename = 'catalog.pdf'
-        catalog(cv, pagesize)
+        create_catalog(cv, pagesize)
     else:
         number = 213
         size = 5 * cm
