@@ -21,6 +21,16 @@ I have provided a [catalog of all 1024 framemarkers](catalog.pdf?raw=true "Space
 
 If you're interested in trying out their code you should buy the book and download the [source code][1].
 
+## Usage
+
+To generate a catalog of all symbols:
+
+    python printer.py --catalog
+
+To generate trackable symbols at a specific size:
+
+    python printer.py --numbers 213 337 357 732 777 --size 5
+
 ## Prerequistes
 
   * Python 2.7.+
