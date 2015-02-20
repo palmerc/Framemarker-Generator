@@ -21,5 +21,11 @@ I have provided a [catalog of all 1024 framemarkers](catalog.pdf?raw=true "Space
 
 If you're interested in trying out their code you should buy the book and download the [source code][1].
 
+## Prerequistes
+
+  * Python 2.7.+
+  * [Reportlab Library][2]
+
 [0]: https://www.packtpub.com/application-development/mastering-opencv-practical-computer-vision-projects
 [1]: https://github.com/MasteringOpenCV/code
+[2]: http://www.reportlab.com
